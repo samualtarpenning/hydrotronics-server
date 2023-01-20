@@ -391,7 +391,7 @@ export class SettingsService {
     this.settings = _settings;
     _status == false ? this.relayService.fanOff() : this.relayService.fanOn();
     this.logger.log(
-      `Fan status changed to ${
+      `Fan ${this.settings.id} status changed to ${
         this.settings.fan.status ? 'Active' : 'Inactive'
       }`,
     );
