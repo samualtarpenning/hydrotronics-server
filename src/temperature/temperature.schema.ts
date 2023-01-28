@@ -2,11 +2,12 @@ import * as mongoose from 'mongoose';
 import { Schema } from 'mongoose';
 
 export const TemperatureSchema = new Schema({
+  date: Date,
   growSpace: {
-    date: Date,
     temperature: Number,
     humidity: Number,
     vpd: Number,
+    ppm: Number,
   },
   weather: {
     timestamp: String,

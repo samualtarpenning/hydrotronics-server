@@ -4,7 +4,7 @@ import { Schema } from 'mongoose';
 export interface ITemperature {
   _id: ObjectId;
   createdAt: Date;
-  zoneId: string;
+  settingsId: string;
   growSpace: IGrowSpace;
   weather: IWeather;
 }

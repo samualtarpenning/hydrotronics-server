@@ -116,11 +116,14 @@ export class SettingsService {
     );
     this.settings = _settings;
     _status === false
-      ? this.relayService.pumpOff()
-      : this.relayService.pumpOn();
+      ? this.relayService.pumpOff(_settings.connection)
+      : this.relayService.pumpOn(_settings.connection);
     this.logger.log(
       `Pump status changed to ${_status ? 'Active' : 'Inactive'}`,
     );
+    _settings.pump.cycling && _status === false
+      ? this.stopPumpTimer(_settings.id)
+      : null;
     return this.settings.pump.status;
   }
 
@@ -204,7 +207,7 @@ export class SettingsService {
         },
         { new: true },
       );
-      // this.relayService.pumpOff();
+      this.relayService.pumpOff(_settings.connection);
       if (settingsId === this.settingsId) {
         this.gatewayService.server.emit('events', _settings);
       }
@@ -251,6 +254,7 @@ export class SettingsService {
         },
         { new: true },
       );
+      this.relayService.pumpOn(_settings.connection);
       this.pumpOnSchedule(settingsId);
       if (settingsId === this.settingsId) {
         this.gatewayService.server.emit('events', this.settings);
@@ -310,6 +314,7 @@ export class SettingsService {
       { new: true },
     );
     this.settings = _settings;
+    this.relayService.pumpOn(_settings.connection);
     this.gatewayService.server.emit('events', this.settings);
     this.logger.warn(`Pump cycle started`);
     return _settings;
@@ -357,9 +362,10 @@ export class SettingsService {
       { new: true },
     );
     _status === false
-      ? this.relayService.lightOff()
-      : this.relayService.lightOn();
+      ? this.relayService.lightOff(_settings.connection)
+      : this.relayService.lightOn(_settings.connection);
     this.settings = _settings;
+  
     this.logger.log(
       `Light status changed to ${
         this.settings.light.status ? 'Active' : 'Inactive'
@@ -389,10 +395,13 @@ export class SettingsService {
       { new: true },
     );
     this.settings = _settings;
-    _status == false ? this.relayService.fanOff() : this.relayService.fanOn();
+    _status == false
+      ? this.relayService.fanOff(_settings.connection)
+      : this.relayService.fanOn(_settings.connection);
+      
     this.logger.log(
       `Fan ${this.settings.id} status changed to ${
-        this.settings.fan.status ? 'Active' : 'Inactive'
+        !this.settings.fan.status ? 'Active' : 'Inactive'
       }`,
     );
 
@@ -427,6 +436,7 @@ export class SettingsService {
         },
         { new: true },
       );
+      this.relayService.fanOff(_settings.connection);
       // this.relayService.pumpOff();
       if (settingsId === this.settingsId) {
         this.gatewayService.server.emit('events', _settings);
@@ -471,6 +481,7 @@ export class SettingsService {
         },
         { new: true },
       );
+      this.relayService.fanOn(_settings.connection);
       this.fanOnSchedule(settingsId);
       if (settingsId === this.settingsId) {
         this.gatewayService.server.emit('events', this.settings);
@@ -484,6 +495,7 @@ export class SettingsService {
   }
 
   private readonly fanOnLogger = new Logger('FanSchedule');
+  private readonly exhaustOnLogger = new Logger('ExhaustSchedule');
   async updateFanOnSchedule(
     settingsId,
     _fanOnTime: number,
@@ -504,6 +516,9 @@ export class SettingsService {
       { new: true },
     );
     this.settings = _settings;
+    if (settingsId === this.settingsId) {
+      this.gatewayService.server.emit('events', this.settings);
+    }
     this.fanOnLogger.log(
       `Pump set to turn off in ${_fanOnTime / 1000 / 60} minutes`,
     );
@@ -559,6 +574,10 @@ export class SettingsService {
       { new: true },
     );
     this.settings = _settings;
+    if (settingsId === this.settingsId) {
+      this.gatewayService.server.emit('events', this.settings);
+    }
+    this.relayService.fanOff(_settings.connection);
     this.logger.warn(`Fan cycle stopped`);
     return _settings;
   }
@@ -582,6 +601,7 @@ export class SettingsService {
       { new: true },
     );
     this.settings = _settings;
+    this.relayService.fanOn(_settings.connection);
     this.gatewayService.server.emit('events', this.settings);
     this.logger.warn(`Fan cycle started`);
     return _settings;
@@ -602,6 +622,7 @@ export class SettingsService {
       },
       { new: true },
     );
+    _status == true ? this.relayService.exhaustOn(_settings.connection) : this.relayService.exhaustOff(_settings.connection);
     this.settings = _settings;
     this.logger.log(
       `Exhaust status changed to ${
@@ -639,17 +660,19 @@ export class SettingsService {
         },
         { new: true },
       );
-      // this.relayService.pumpOff();
-      if (settingsId === this.settingsId) {
-        this.gatewayService.server.emit('events', _settings);
-      }
-      this.fanOnLogger.log(
+      this.relayService.exhaustOff(_settings.connection);
+
+     
+
+      this.exhaustOnLogger.log(
         `Exhaust set to ${this.settings.exhaust.fanOnTime / 1000 / 60} minutes`,
       );
     };
 
     const _settings = await this.settingsModel.findById(settingsId);
-
+    if (settingsId === this.settingsId) {
+      this.gatewayService.server.emit('events', this.settings);
+    }
     const interval = setInterval(callback, _settings.fan.fanOnTime);
     this.schedulerRegistry.addInterval(`ExhaustOnTimer${settingsId}`, interval);
   }
@@ -687,10 +710,11 @@ export class SettingsService {
         },
         { new: true },
       );
-      this.exhaustOnSchedule(settingsId);
+      this.relayService.exhaustOn(_settings.connection);
       if (settingsId === this.settingsId) {
         this.gatewayService.server.emit('events', this.settings);
       }
+      this.exhaustOnSchedule(settingsId);
     };
     this.logger.log(
       `exhaust status changed to ${
@@ -724,7 +748,7 @@ export class SettingsService {
       { new: true },
     );
     this.settings = _settings;
-    this.fanOnLogger.log(
+    this.exhaustOnLogger.log(
       `Exhaust set to turn off in ${_fanOnTime / 1000 / 60} minutes`,
     );
     return _settings;
@@ -749,8 +773,8 @@ export class SettingsService {
       },
       { new: true },
     );
-    this.fanOnLogger.log(
-      `Fan set to turn off in ${_fanOffTime / 1000 / 60} minutes`,
+    this.exhaustOnLogger.log(
+      `Exhaust set to turn off in ${_fanOffTime / 1000 / 60} minutes`,
     );
     this.settings = _settings;
     return _settings;
@@ -779,7 +803,8 @@ export class SettingsService {
       { new: true },
     );
     this.settings = _settings;
-    this.logger.warn(`Fan cycle stopped`);
+    this.relayService.exhaustOff(_settings.connection);
+    this.logger.warn(`Exhaust cycle stopped`);
     return _settings;
   }
   async startExhaustCycle(settingsId) {
@@ -802,7 +827,8 @@ export class SettingsService {
       { new: true },
     );
     this.settings = _settings;
-    this.gatewayService.server.emit('events', this.settings);
+    this.relayService.exhaustOn(_settings.connection);
+    this.gatewayService.server.emit('events', _settings);
     this.logger.warn(`Exhaust cycle started`);
     return _settings;
   }
@@ -829,7 +855,7 @@ export class SettingsService {
           },
           { new: true },
         );
-        this.relayService.lightOff();
+        this.relayService.lightOff(settings.connection);
       }
       if (
         settings.light.lightOnTime == moment().format('HH:mm') &&
@@ -840,15 +866,15 @@ export class SettingsService {
           {
             $set: {
               light: {
-                lightOnTime: this.settings.light.lightOnTime,
-                lightOffTime: this.settings.light.lightOffTime,
+                lightOnTime: settings.light.lightOnTime,
+                lightOffTime: settings.light.lightOffTime,
                 status: true,
               },
             },
           },
           { new: true },
         );
-        this.relayService.lightOn();
+        this.relayService.lightOn(settings.connection);
       }
     });
 
@@ -917,12 +943,34 @@ export class SettingsService {
       (durationInMilliseconds -
         moment.duration(end.diff(now)).asMilliseconds()) /
       durationInMilliseconds;
+    if (
+      durationInMilliseconds - moment.duration(end.diff(now)).asMilliseconds() <
+      0
+    ) {
+      this.logger.warn(`Pump cycle completed`);
+      await this.settingsModel.findByIdAndUpdate(
+        _settings.id,
+        {
+          $set: {
+            pump: {
+              pumpOnTime: _settings.pump.pumpOnTime,
+              pumpOffTime: _settings.pump.pumpOffTime,
+              status: !_settings.pump.status,
+              timerStarted: moment().format('HH:mm:ss'),
+            },
+          },
+        },
+        { new: true },
+      );
+    }
+
     this.gatewayService.server.emit('pumpTimer', {
       id: _settings.id,
       totalHours: moment.duration(durationInMilliseconds).hours(),
       status: _settings.pump.status,
       totalMinutes: moment.duration(durationInMilliseconds).minutes(),
       totalSeconds: moment.duration(durationInMilliseconds).seconds(),
+
       remainingHours: moment
         .duration(moment(end, 'HH:mm:ss').diff(now))
         .hours(),

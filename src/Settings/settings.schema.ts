@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 
 export const SettingsSchema = new mongoose.Schema({
+  connection: String,
   light: {
     status: Boolean,
     lightOnTime: String,

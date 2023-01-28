@@ -8,12 +8,16 @@ import { SettingsGateway } from 'src/Gateways/settings.gateway';
 import { InjectModel } from '@nestjs/mongoose';
 @Injectable()
 export class TemperatureService {
-  t: number;
-  h: number;
-  vpd: any;
+  t = [];
+  h = [];
+  vpd = [];
+  ppm =[];
   logged: boolean;
   weather: IWeather;
   temperatureLogModel: any;
+  connections = [
+    "http://192.168.1.4", "http://192.168.1.2"
+  ]
 
   constructor(
     @Inject('TEMPERATURE_MODEL')
@@ -26,25 +30,40 @@ export class TemperatureService {
   async findAll(): Promise<ITemperature[]> {
     return this.temperatureModel.find().exec();
   }
-  async getCurrentTemperature(): Promise<ITemperature> {
-    const loggedTemp = {
+  async getCurrentTemperature(): Promise<any[]> {
+  
+    const loggedTemp = [{
       _id: new mongoose.Types.ObjectId(),
       createdAt: new Date(moment().format()),
-      zoneId: '5f9f1b0b0b1b9c0b8c0b0b0b',
-      growSpace: {
-        temperature: (this.t * 9) / 5 + 32,
-        humidity: this.h,
-        vpd: this.vpd,
-      },
-      weather: this.weather,
-    };
+      settingsId: '639e769b119143ff3ff6b267',
+     
+        temperature: this.t[0],
+        humidity: this.h[0],
+        vpd: this.vpd[0],
+        ppm: this.ppm[0],
+   weather: { ...this.weather,}
+     
+    }, 
+  {
+    _id: new mongoose.Types.ObjectId(),
+    createdAt: new Date(moment().format()),
+    settingsId: '63c2eccddc6a55471cab3b69',
+   
+      temperature: this.t[1],
+      humidity: this.h[1],
+      vpd: this.vpd[1],
+      ppm: this.ppm[1],
+    weather: { ...this.weather,}
+
+  }
+  ] 
     return loggedTemp;
   }
 
   async getVpd() {
     // get vpd from t and h
     await this.httpService.get('http://192.168.1.4/getVpd').subscribe((res) => {
-      this.vpd = parseFloat(res.data);
+      this.vpd = [1.22, 1.24];
       // console.log(this.t);
     });
     return this.vpd;
@@ -163,37 +182,65 @@ export class TemperatureService {
       },
     ]);
   }
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_MINUTE)
   async updateTemp() {
+  
+    this.connections.forEach(async (connection, i) => {
     await this.httpService
-      .get('http://192.168.1.4/getTemperature')
+      .get(connection + '/getTemperature')
       .subscribe((res) => {
-        this.t = parseFloat(res.data);
+        this.t[i] = (parseFloat(res.data)  * 9) / 5 + 32;
+        
       });
 
     await this.httpService
-      .get('http://192.168.1.4/getRelativeHumidity')
+      .get(connection + '/getRelativeHumidity')
       .subscribe((res) => {
-        this.h = parseFloat(res.data);
+        this.h[i] = parseFloat(res.data);
       });
 
-    await this.httpService.get('http://192.168.1.4/getVpd').subscribe((res) => {
-      this.vpd = parseFloat(res.data);
+    await this.httpService.get(connection + '/getVpd').subscribe((res) => {
+   
+      this.vpd[i] = parseFloat(res.data);
       // console.log(this.t);
     });
-
-    this.gatewayService.server.emit('temperature', {
-      temp: (this.t * 9) / 5 + 32,
-      humidity: this.h,
-      vpd: this.vpd,
+    await this.httpService.get(connection + '/ppm').subscribe((res) => {
+      this.ppm[i] = parseFloat(res.data);
+      // console.log(this.t);
     });
+  })
+
+    this.gatewayService.server.emit('temperature',  [{
+   
+      createdAt: new Date(moment().format()),
+      settingsId: '639e769b119143ff3ff6b267',
+        temperature: this.t[0],
+        humidity: this.h[0],
+        vpd: this.vpd[0],
+        ppm: this.ppm[0],
+        weather: { ...this.weather,}
+    }, 
+  {
+  
+    settingsId: '63c2eccddc6a55471cab3b69',
+      temperature: this.t[1],
+      humidity: this.h[1],
+      vpd: this.vpd[1],
+      ppm: this.ppm[1],
+      weather: {
+    ...this.weather,
+      }
+  }
+  ]
+  );
+  
 
     this.gatewayService.server.emit('weather', {
       weather: this.weather,
     });
   }
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron(CronExpression.EVERY_2_HOURS)
   async handleCron() {
     await this.httpService
       .get(
@@ -237,13 +284,14 @@ export class TemperatureService {
 
   @Cron(CronExpression.EVERY_HOUR)
   async create(): Promise<ITemperature> {
-    const createdTemperatureLog = new this.temperatureModel({
-      zoneId: '5f9f1b1b1b1b1b1b1b1b1b1b',
+    const createdTemperatureLog1 = new this.temperatureModel({
+      settingsId: '639e769b119143ff3ff6b267',
       createdAt: new Date(),
       growSpace: {
-        temperature: (this.t * 9) / 5 + 32,
-        humidity: this.h,
-        vpd: this.vpd,
+        temperature: this.t[0],
+        humidity: this.h[0],
+        vpd: this.vpd[0],
+        ppm: this.ppm[0],
       },
       weather: {
         temperature: this.weather.temperature,
@@ -262,16 +310,57 @@ export class TemperatureService {
         weatherIcon: this.weather.weatherIcon,
       },
     });
+    const createdTemperatureLog2 = new this.temperatureModel({ 
+      settingsId: '63c2eccddc6a55471cab3b69',
+      createdAt: new Date(),
+      growSpace: {
+        temperature: this.t[1],
+        humidity: this.h[1],
+        vpd: this.vpd[1],
+        ppm: this.ppm[1],
+      },
+      weather: {
+        temperature: this.weather.temperature,
+        feelsLike: this.weather.feelsLike,
+        maxTemp: this.weather.maxTemp,
+        minTemp: this.weather.minTemp,
+        humidity: this.weather.humidity,
+        windSpeed: this.weather.windSpeed,
+        windDirection: this.weather.windDirection,
+        pressure: this.weather.pressure,
+        cloudCover: this.weather.cloudCover,
+        sunset: this.weather.sunset,
+        sunrise: this.weather.sunrise,
+        weather: this.weather.weather,
+        weatherDescription: this.weather.weatherDescription,
+        weatherIcon: this.weather.weatherIcon,
+      },
+    });
+    await createdTemperatureLog1.save();
 
-    return createdTemperatureLog.save();
+    await createdTemperatureLog2.save();
+
+    return createdTemperatureLog1;
   }
-  @Cron(CronExpression.EVERY_3_HOURS)
+  @Cron(CronExpression.EVERY_HOUR)
   async log() {
+
     this.logger.log(
-      'Temperature Logged',
-      `System Temperature: ${(this.t * 9) / 5 + 32}°F`,
-      `System Humidity: ${this.h}%`,
-      `System VPD: ${this.vpd}kPa`,
+      'Zone 1',
+      `System Temperature: ${this.t[0]}°F`,
+      `System Humidity: ${this.h[0]}%`,
+      `System VPD: ${this.vpd[0]}kPa`,
+      `System PPM: ${this.ppm[0]}ppm`,
+    );
+    this.logger.log(
+      'Zone 2',
+      `System Temperature: ${this.t[1]}°F`,
+      `System Humidity: ${this.h[1]}%`,
+      `System VPD: ${this.vpd[1]}kPa`,
+      `System PPM: ${this.ppm[1]}ppm`,
+    );
+    this.logger.log(
+      'Weather',
       `Weather Temperature: ${this.weather.temperature.toFixed(2)}°F`,
       `Weather Humidity: ${this.weather.humidity.toFixed(2)}%`,
       `Weather: ${this.weather.weatherDescription}`,

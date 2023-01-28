@@ -34,4 +34,5 @@ export interface ISettings {
   pump: IPump;
   fan: IFan;
   exhaust: IExhaust;
+  connection: string;
 }

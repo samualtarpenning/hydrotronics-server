@@ -8,37 +8,37 @@ export class RelayController {
   @Get('/lightOff')
   @HttpCode(200)
   lightOff() {
-    this.relayService.lightOff();
+    // this.relayService.lightOff();
     return { statusCode: 200, message: 'OK' };
   }
   @Get('/lightOn')
   @HttpCode(200)
   lightOn() {
-    this.relayService.lightOn();
+    // this.relayService.lightOn();
     return { statusCode: 200, message: 'OK' };
   }
   @Get('/pumpOff')
   @HttpCode(200)
   pumpOff() {
-    this.relayService.pumpOff();
+    // this.relayService.pumpOff();
     return { statusCode: 200, message: 'OK' };
   }
   @Get('/pumpOn')
   @HttpCode(200)
   pumpOn() {
-    this.relayService.pumpOn();
+    // this.relayService.pumpOn();
     return { statusCode: 200, message: 'OK' };
   }
   @Get('/fanOff')
   @HttpCode(200)
   fanOff() {
-    this.relayService.fanOn();
+    // this.relayService.fanOn();
     return { statusCode: 200, message: 'OK' };
   }
   @Get('/fanOn')
   @HttpCode(200)
   fanOn() {
-    this.relayService.fanOff();
+    // this.relayService.fanOff();
     return { statusCode: 200, message: 'OK' };
   }
 }
