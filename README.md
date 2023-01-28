@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="src/Assets/logo.png" width="320" alt="Nest Logo" /></a>
+  <a href="http://nestjs.com/" target="blank"><img src="/src/Assets/logo.png" width="320" alt="Nest Logo" /></a>
 </p>
 git commit -m "message"
 git push -u orgin main 
