@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="/home/samual/Desktop/hydrotronics-server/src/Assets/logo.png" width="320" alt="Hydrotroncis Logo" /></a>
+  <a href="http://nestjs.com/" target="blank"><img src="../src/Assets/logo.png" width="320" alt="Hydrotroncis Logo" /></a>
 </p>
 git commit -m "message"
 git push -u orgin main 
