@@ -8,6 +8,7 @@ import {
   Post,
   Logger,
   HttpCode,
+  Param,
 } from '@nestjs/common';
 import { ITemperature } from './temperature.interface';
 import { TemperatureService } from 'src/Services/temperature.service';
@@ -17,29 +18,22 @@ import { format } from 'path';
 @Controller('temperature')
 export class TemperatureController {
   constructor(private temperatureService: TemperatureService) {}
-  @Get('/GetTempByHour')
+  @Get('/GetTempByHour/:settingsId')
   @HttpCode(200)
-  async getWeekTemp() {
-    const temperatures: any = await this.temperatureService.findAll();
-    const groupByHour = temperatures.reduce((group, temp) => {
-      let newArry = [];
-      // const { hour } = moment(temp.timestamp).tz("America/Chicago").hour();
-      group[moment(temp.timestamp).tz('America/Chicago').hour()] =
-        group[moment(temp.timestamp).tz('America/Chicago').hour()] ?? [];
-      newArry[moment(temp.timestamp).tz('America/Chicago').hour()] =
-        newArry[moment(temp.timestamp).tz('America/Chicago').hour()] ?? [];
-      newArry[moment(temp.timestamp).tz('America/Chicago').hour()].push(
-        temp.temperature,
-      );
-      group[moment(temp.timestamp).tz('America/Chicago').hour()] = newArry[
-        moment(temp.timestamp).tz('America/Chicago').hour()
-      ].reduce((a, c) => a + c, 0);
-      group[moment(temp.timestamp).tz('America/Chicago').hour()] =
-        group[moment(temp.timestamp).tz('America/Chicago').hour()] /
-        newArry[moment(temp.timestamp).tz('America/Chicago').hour()].length;
-      return group;
-    }, {});
-    return { temperatures: groupByHour };
+  async getWeekTemp(@Param('settingsId') settingsId: string) {
+    // const temperatures = await this.temperatureService.findAllByHour(
+    //   settingsId,
+    // );
+    // const groupByHour = temperatures.reduce((acc, cur: any) => {
+    //   const hour = moment(cur.date).format('h a');
+    //   if (!acc[hour]) {
+    //     acc[hour] = [];
+    //   }
+    //   acc[hour].push(cur);
+    //   return acc;
+    // }, {});
+
+    // return { temperatures: groupByHour };
   }
 
   @Get('/getCurrentTemperature')

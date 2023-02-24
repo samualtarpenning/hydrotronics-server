@@ -75,7 +75,7 @@ export class RelayService {
       }
     });
   }
-  
+
   async exhaustOff(connection: string): Promise<any> {
     await this.httpService.get(connection + '/exhaustOff').subscribe((res) => {
       if (res.data) {
@@ -98,5 +98,4 @@ export class RelayService {
       }
     });
   }
-
 }

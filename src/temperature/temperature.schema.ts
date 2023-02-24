@@ -3,6 +3,7 @@ import { Schema } from 'mongoose';
 
 export const TemperatureSchema = new Schema({
   date: Date,
+  settingsId: String,
   growSpace: {
     temperature: Number,
     humidity: Number,
@@ -10,7 +11,6 @@ export const TemperatureSchema = new Schema({
     ppm: Number,
   },
   weather: {
-    timestamp: String,
     temperature: Number,
     feelsLike: Number,
     maxTemp: Number,

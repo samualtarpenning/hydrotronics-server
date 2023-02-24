@@ -315,7 +315,7 @@ export class SettingsService {
     );
     this.settings = _settings;
     this.relayService.pumpOn(_settings.connection);
-    this.gatewayService.server.emit('events', this.settings);
+    this.gatewayService.server.emit('events', _settings);
     this.logger.warn(`Pump cycle started`);
     return _settings;
   }
@@ -365,7 +365,7 @@ export class SettingsService {
       ? this.relayService.lightOff(_settings.connection)
       : this.relayService.lightOn(_settings.connection);
     this.settings = _settings;
-  
+
     this.logger.log(
       `Light status changed to ${
         this.settings.light.status ? 'Active' : 'Inactive'
@@ -398,7 +398,7 @@ export class SettingsService {
     _status == false
       ? this.relayService.fanOff(_settings.connection)
       : this.relayService.fanOn(_settings.connection);
-      
+
     this.logger.log(
       `Fan ${this.settings.id} status changed to ${
         !this.settings.fan.status ? 'Active' : 'Inactive'
@@ -622,7 +622,9 @@ export class SettingsService {
       },
       { new: true },
     );
-    _status == true ? this.relayService.exhaustOn(_settings.connection) : this.relayService.exhaustOff(_settings.connection);
+    _status == true
+      ? this.relayService.exhaustOn(_settings.connection)
+      : this.relayService.exhaustOff(_settings.connection);
     this.settings = _settings;
     this.logger.log(
       `Exhaust status changed to ${
@@ -661,8 +663,6 @@ export class SettingsService {
         { new: true },
       );
       this.relayService.exhaustOff(_settings.connection);
-
-     
 
       this.exhaustOnLogger.log(
         `Exhaust set to ${this.settings.exhaust.fanOnTime / 1000 / 60} minutes`,

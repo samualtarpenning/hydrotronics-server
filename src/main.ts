@@ -6,6 +6,9 @@ async function bootstrap() {
   //   key: fs.readFileSync('./key.pem'),
   //   cert: fs.readFileSync('./cert.pem'),
   // };
+  process.on('uncaughtException', function (error) {
+    console.log(error.stack);
+  });
 
   const app = await NestFactory.create(AppModule);
   await app.enableCors();

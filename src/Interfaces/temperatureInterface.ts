@@ -3,7 +3,7 @@ import { Schema } from 'mongoose';
 
 export interface ITemperature {
   _id: ObjectId;
-  createdAt: Date;
+  date: Date;
   settingsId: string;
   growSpace: IGrowSpace;
   weather: IWeather;
@@ -34,8 +34,8 @@ export interface IWeather {
 
 export const TemperatureSchema = new Schema({
   _id: String,
-  createdAt: { type: Date, default: Date.now },
-  zoneId: String,
+  date: { type: Date, default: Date.now },
+  settingsId: String,
   growSpace: {
     temperature: Number,
     humidity: Number,

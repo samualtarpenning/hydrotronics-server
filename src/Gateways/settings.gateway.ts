@@ -47,4 +47,8 @@ export class SettingsGateway {
   handleTemperatureUpdate(): string {
     return 'Settings Gateway Triggered';
   }
+  @SubscribeMessage('temperatureChart')
+  handleTemperatureChartUpdate(): string {
+    return 'Settings Gateway Triggered';
+  }
 }
